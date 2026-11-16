@@ -4,6 +4,17 @@ This is a local learning project based on the provided guide. The records in
 `/patients` are synthetic. Do not add real patient information or use this as a
 production healthcare service.
 
+## Port map
+
+| Service | Address from your Mac | Destination |
+| --- | --- | --- |
+| Jenkins | `http://localhost:8080` | Jenkins on port 8080 |
+| API in Docker | `http://localhost:8081` | Container port 8080 |
+| API in Kubernetes | `http://localhost:9000` after port-forwarding | Service port 80 to container port 8080 |
+
+Keep the API's container port at 8080; only its host-side Docker port is 8081.
+This leaves Jenkins free to use host port 8080.
+
 ## Run locally
 
 With Python 3.12 and pip installed:
@@ -13,15 +24,16 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 python -m unittest
-gunicorn -b 127.0.0.1:8080 app:app
+gunicorn -b 127.0.0.1:8081 app:app
 ```
 
-In another terminal, verify `http://127.0.0.1:8080/health` and
-`http://127.0.0.1:8080/patients`. Build and run the container with:
+In another terminal, verify `http://127.0.0.1:8081/health` and
+`http://127.0.0.1:8081/patients`. Port 8080 is used by Jenkins on this Mac.
+Build and run the container with:
 
 ```sh
 docker build -t patient-api:local .
-docker run --rm -p 8080:8080 patient-api:local
+docker run --rm -p 8081:8080 patient-api:local
 ```
 
 ## Docker
@@ -32,11 +44,11 @@ repeat the container check:
 ```sh
 docker info
 docker build -t patient-api:local .
-docker run --rm -p 8080:8080 patient-api:local
+docker run --rm -p 8081:8080 patient-api:local
 ```
 
-In another terminal, try `curl http://127.0.0.1:8080/health` and
-`curl http://127.0.0.1:8080/patients`. Stop the container with Ctrl+C.
+In another terminal, try `curl http://127.0.0.1:8081/health` and
+`curl http://127.0.0.1:8081/patients`. Stop the container with Ctrl+C.
 
 ## Kubernetes with Minikube
 
@@ -91,11 +103,11 @@ cluster with `kubectl config use-context minikube`.
 ## Jenkins
 
 Jenkins LTS is installed and running locally at
-`http://localhost:8080`. Open that address in a browser. If Jenkins asks to be
-unlocked, find the initial password file under the Jenkins home directory
-(commonly `~/.jenkins/secrets/initialAdminPassword`) and enter its contents in
-the local Jenkins setup screen. Install the suggested plugins and create an
-admin account. Do not share that initial password.
+`http://localhost:8080`. Open `http://localhost:8080/login` in a browser. If
+Jenkins asks to be unlocked, find the initial password file under the Jenkins
+home directory (commonly `~/.jenkins/secrets/initialAdminPassword`) and enter
+its contents in the local Jenkins setup screen. Install the suggested plugins
+and create an admin account. Do not share that initial password.
 
 The project is currently only in this local folder; Jenkins' “Pipeline script
 from SCM” needs a Git remote it can read. Create a private repository in your
